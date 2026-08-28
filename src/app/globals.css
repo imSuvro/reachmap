@@ -1,0 +1,36 @@
+/* ReachMap design tokens — docs/ux.md §5. The app commits to a light
+   cartographic ground (the basemap is light); painted explicitly. */
+:root {
+  --ink: #1b1b2f;
+  --paper: #fbf9f5;
+  --muted: #6e6e85;
+  --accent: #00897b;
+  --line: #e3e0d8;
+  --band-15: #ffb300;
+  --band-30: #f4511e;
+  --band-45: #c2185b;
+  --band-60: #4527a0;
+  --shadow: 0 2px 12px rgba(27, 27, 47, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
