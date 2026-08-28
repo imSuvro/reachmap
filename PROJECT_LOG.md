@@ -18,8 +18,8 @@ conventional commits, merge to `main`, annotated tag `stage-NN` on completion.
 | 5 | Architecture (ADRs) | Architect | **done** 2026-08-29 | stage-05 |
 | 6 | Planning (backlog) | Product Owner | **done** 2026-08-29 | stage-06 |
 | 7 | Repo + CI | DevOps | **done** 2026-08-29 | stage-07 |
-| 8 | Data pipeline | Dev | in progress | |
-| 9 | Core engine | Dev | pending | |
+| 8 | Data pipeline | Dev | **done** 2026-08-30 | stage-08 |
+| 9 | Core engine | Dev | in progress | |
 | 10 | Frontend | Dev | pending | |
 | 11 | API/glue (serving) | Dev | pending | |
 | 12 | Testing | QA | pending | |
@@ -63,6 +63,58 @@ Environment verified: Node 22.22.3 (nvm4w), pnpm, git 2.54, gh CLI
 authenticated as imSuvro (scopes repo+workflow), Java 17 (runs the official
 MobilityData gtfs-validator), Docker available. Vercel via authenticated MCP
 connector (team `suvros-projects`, hobby).
+
+### Stage 8 — Data pipeline (done 2026-08-30, tag stage-08)
+
+`config/city.ts` (the one city file) + `pipeline/` (gtfs.ts primitives,
+compile.ts transform, validate.ts gate, download.ts, build.ts orchestrator)
++ `src/engine/{types,container}.ts` (isomorphic codec) + 32 unit tests over
+handcrafted fixtures covering: blank-time interpolation, >24:00 preserved
+raw, trip renumbering + bitset domain, calendar_dates add/remove on
+representative dates, frequencies expansion, service exclusion,
+transfers.txt override + type-3 forbid, parent_station collapse, spatial
+index round-trip via the contract formula, stale-calendar and
+anemic-weekday guards, byte-identical determinism, container codec
+round-trip/alignment/truncation.
+
+**Real-feed run (2026-08-30):** validator gate passed honestly (149 ERRORs,
+every code allowlisted per config because the pipeline deterministically
+skips those rows: 45 stop rows, 102 trip rows, 192 dangling refs, 0 blank
+times, 0 negative rides). Compiled 5,580 stops / 47,047 trips / 1,313,396
+connections / 14,050 footpaths — byte counts match the stage-3 spike.
+**Container: 18.65 MB raw → 6.36 MB gz (34%)** — the ADR-003 open question
+answered: comfortably under the 8 MB wire budget, sharding contingency
+stays dormant. Output committed under `public/data/chennai/` (partial
+build: default-iso/poster land with the stage-9 engine). Weekday trip
+counts 47,047 ×6 + Sunday 46,973 (the −74 HSC trips).
+
+**Pre-merge adversarial review** (2 finders → 15 independent verifiers):
+17 claims, **10 confirmed** (5 rejected with trace-backed refutations), all
+fixed + regression-tested:
+
+- transfers.txt with an *empty* `min_transfer_time` cell became an override
+  of 0 (`Number("") === 0`) → every bare row a 60 s teleport. Fixed: blank
+  cell = no override.
+- frequencies expansion anchored on the template's first row even when that
+  row was a dropped leading-blank (`rDep = -1`) → clones shifted hours off.
+  Fixed: anchor on first surviving row; negative-departure hard assert.
+- Malformed calendar.txt dates poisoned `calStart/calEnd` to NaN, silently
+  disabling the stale-calendar guard. Fixed: row-level isFinite gate.
+- Excluded-service stop_times rows were miscounted as `danglingRefs`.
+- Sidecar partial-build catch could swallow a transitive
+  ERR_MODULE_NOT_FOUND from inside a real sidecars module. Fixed: only the
+  import is guarded, and only for the sidecars specifier itself.
+- Manifest calendar dates drifted from the contract (compact vs ISO) —
+  contract updated to ISO; manifest assembly extracted to a pure
+  `pipeline/manifest.ts` with its own tests (also closing the "no build.ts
+  coverage" finding for prune/keep-set + URL/date shapes).
+- `clampedStops` was declared but never incremented; validator jar cache
+  now version-named + atomically installed + size-checked; dead existsSync
+  removed.
+
+All 39 tests green; rebuild after fixes produced the **identical artifact
+hash** (915b6267) — the confirmed bugs were latent for this feed, which is
+why review had to find them rather than the build.
 
 ### Stage 7 — Repo + CI (done 2026-08-29, tag stage-07)
 
