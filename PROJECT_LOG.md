@@ -17,8 +17,8 @@ conventional commits, merge to `main`, annotated tag `stage-NN` on completion.
 | 4 | UX | UX Designer | **done** 2026-08-29 | stage-04 |
 | 5 | Architecture (ADRs) | Architect | **done** 2026-08-29 | stage-05 |
 | 6 | Planning (backlog) | Product Owner | **done** 2026-08-29 | stage-06 |
-| 7 | Repo + CI | DevOps | in progress | |
-| 8 | Data pipeline | Dev | pending | |
+| 7 | Repo + CI | DevOps | **done** 2026-08-29 | stage-07 |
+| 8 | Data pipeline | Dev | in progress | |
 | 9 | Core engine | Dev | pending | |
 | 10 | Frontend | Dev | pending | |
 | 11 | API/glue (serving) | Dev | pending | |
@@ -63,6 +63,29 @@ Environment verified: Node 22.22.3 (nvm4w), pnpm, git 2.54, gh CLI
 authenticated as imSuvro (scopes repo+workflow), Java 17 (runs the official
 MobilityData gtfs-validator), Docker available. Vercel via authenticated MCP
 connector (team `suvros-projects`, hobby).
+
+### Stage 7 — Repo + CI (done 2026-08-29, tag stage-07)
+
+- Next.js 15 (App Router, TS, pnpm) scaffold, hand-built: IBM Plex via
+  `next/font`, ux.md tokens in globals.css, contract §5 cache headers
+  already in `next.config.ts`. Local gates green: typecheck, lint (ESLint 9
+  + eslint-config-next 15 — v10/v16 mismatches found and pinned), vitest
+  (passWithNoTests until stage 8), `next build` (102 kB first-load raw
+  ≈ well under the 100 KB **brotli** budget).
+- Public repo **github.com/imSuvro/reachmap**; full history + tags
+  stage-01..06 pushed.
+- Branch protection on `main`: PRs required (0 approvals — solo repo),
+  required status check `ci`, no force pushes, admin-enforce off (so tags
+  and emergency pushes stay possible). Stage 7 itself was the last local
+  bootstrap merge; stages 8+ merge via PRs with required CI.
+- CI: one job `ci` (typecheck + lint + vitest + build) on PRs and main.
+- Vercel: project `reachmap` (prj_cIhGS0XDhOuyb75BbmVMDjacABcr) created
+  via the authenticated Vercel connector, **git-linked to the GitHub repo**
+  — previews per PR, production on main push. First production deployment
+  built READY from the stage-7 merge commit with aliases
+  **https://reachmap.vercel.app** (the bare subdomain was unclaimed and
+  auto-assigned), `reachmap-suvros-projects.vercel.app`; Vercel
+  Authentication (deploy protection) disabled by default = no signup wall.
 
 ### Stage 6 — Backlog (done 2026-08-29, tag stage-06)
 
