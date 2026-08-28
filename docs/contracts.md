@@ -126,7 +126,7 @@ sidecars, never in the binary.
             "sourceUrl": "…", "license": "ODbL",
             "licenseUrl": "https://opendatacommons.org/licenses/odbl/",
             "version": "2025.03.25", "downloadedAt": "…", "sha256": "…",
-            "calendarStart": "20240501", "calendarEnd": "20300501",
+            "calendarStart": "2024-05-01", "calendarEnd": "2030-05-01",  // ISO, like representativeDates
             "validator": { "tool": "gtfs-validator", "version": "8.0.1",
                            "errors": 0, "warnings": 0 } },
   "calendar": { "representativeDates": ["2026-08-31", "…7 ISO dates, Mon-first"],

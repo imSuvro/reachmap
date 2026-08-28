@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "city": "chennai",
+  "cityName": "Chennai",
+  "subtitle": "MTC bus + CMRL metro",
+  "timezone": "Asia/Kolkata",
+  "tzLabel": "IST",
+  "artifact": {
+    "url": "/data/chennai/timetable.915b6267.bin.gz",
+    "gzBytes": 6358920,
+    "rawBytes": 18654780,
+    "sha256": "915b626731e4c6498c9c69d4a18ad5f8802f982ddef4e3014a8861db3120be4c"
+  },
+  "stopNames": {
+    "url": "/data/chennai/stopnames.05b2a937.json",
+    "bytes": 113013,
+    "sha256": "05b2a9375cf70aa98c29bc386372b3f5f13bbe266eea1e4bfdaeeb7c1b2bf6f4"
+  },
+  "defaultIsochrone": null,
+  "poster": null,
+  "map": {
+    "styleUrl": "https://tiles.openfreemap.org/styles/positron",
+    "styleFallback": null
+  },
+  "dataNotes": [
+    "Unofficial community feed: MTC data collected from the MTC mobile app; CMRL schedules derived from published headways.",
+    "Suburban rail is not included.",
+    "Door-to-door times assume 4.8 km/h walking with a 1.3 detour factor; transfers up to 300 m.",
+    "A small number of malformed feed rows are skipped; exact counts are in the build manifest."
+  ],
+  "horizonSec": 3600,
+  "counts": {
+    "stops": 5580,
+    "trips": 47047,
+    "connections": 1313396,
+    "footpaths": 14050
+  },
+  "skipped": {
+    "stopRows": 45,
+    "tripRows": 102,
+    "stopTimeRows": 0,
+    "danglingRefs": 192,
+    "negativeRides": 0,
+    "clampedStops": 0,
+    "excludedServices": []
+  },
+  "feed": {
+    "name": "chennai-unified-gtfs",
+    "publisher": "UngalSoththu / Ithu Ungal Soththu",
+    "attributionHtml": "Transit data © <a href=\"https://github.com/ungalsoththu/ChennaiGTFS\" target=\"_blank\" rel=\"noopener\">UngalSoththu</a> (ODbL)",
+    "sourceUrl": "https://raw.githubusercontent.com/ungalsoththu/ChennaiGTFS/main/data/chennai-unified-gtfs.zip",
+    "license": "ODbL",
+    "licenseUrl": "https://opendatacommons.org/licenses/odbl/",
+    "version": "2025.03.25",
+    "downloadedAt": "2026-08-28T22:42:06.899Z",
+    "sha256": "db1da880f9ad93e352f6658df0e94a8b2d71cd1dc8bdfbb60fa3968a9b0ad3e6",
+    "calendarStart": "2024-05-01",
+    "calendarEnd": "2030-05-01",
+    "validator": {
+      "tool": "gtfs-validator",
+      "version": "8.0.1",
+      "errors": 149,
+      "warnings": 1490
+    }
+  },
+  "calendar": {
+    "representativeDates": [
+      "2026-09-07",
+      "2026-09-01",
+      "2026-09-02",
+      "2026-09-03",
+      "2026-09-04",
+      "2026-09-05",
+      "2026-09-06"
+    ],
+    "activeTripsPerDay": [
+      47047,
+      47047,
+      47047,
+      47047,
+      47047,
+      47047,
+      46973
+    ]
+  },
+  "walking": {
+    "speedMps": 1.33,
+    "detour": 1.3,
+    "transferRadiusM": 300,
+    "minTransferSec": 60
+  },
+  "bands": [
+    900,
+    1800,
+    2700,
+    3600
+  ],
+  "grid": {
+    "cellM": 200
+  },
+  "bbox": [
+    79.76792,
+    12.58166,
+    80.3698,
+    13.52356
+  ],
+  "defaultView": {
+    "lat": 13.0827,
+    "lon": 80.2757,
+    "weekday": 1,
+    "depSec": 30600,
+    "zoom": 11
+  },
+  "build": {
+    "at": "2026-08-28T22:57:56.050Z",
+    "configHash": "be7fff6d46b64bd9168b344f2114d872096b4491cb4ccd964ad7125e9ded3e47",
+    "git": "91b3804"
+  }
+}
