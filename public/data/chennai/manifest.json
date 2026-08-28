@@ -16,8 +16,16 @@
     "bytes": 113013,
     "sha256": "05b2a9375cf70aa98c29bc386372b3f5f13bbe266eea1e4bfdaeeb7c1b2bf6f4"
   },
-  "defaultIsochrone": null,
-  "poster": null,
+  "defaultIsochrone": {
+    "url": "/data/chennai/default-iso.ac6ddf3b.geojson",
+    "bytes": 85799,
+    "sha256": "ac6ddf3b769ecf6dbad46b27e40bdb613d7276b194a4d3e1a3c3a69a8ce7c31b"
+  },
+  "poster": {
+    "url": "/data/chennai/poster.81b029a6.webp",
+    "width": 1200,
+    "height": 630
+  },
   "map": {
     "styleUrl": "https://tiles.openfreemap.org/styles/positron",
     "styleFallback": null
@@ -112,8 +120,8 @@
     "zoom": 11
   },
   "build": {
-    "at": "2026-08-28T22:57:56.050Z",
+    "at": "2026-08-28T23:05:52.026Z",
     "configHash": "be7fff6d46b64bd9168b344f2114d872096b4491cb4ccd964ad7125e9ded3e47",
-    "git": "91b3804"
+    "git": "1fd5a25"
   }
 }
