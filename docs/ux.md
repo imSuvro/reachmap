@@ -46,8 +46,12 @@ one control card, one brand chip. The personality lives in three choices:
 2. New bands crossfade in (~200 ms). The dial's readout row updates:
    origin coordinates (mono, 4 decimals) and "≈ N stops reachable in 60 min".
 3. Clicking a transit desert still works: bands collapse to the walk-only
-   disc and the readout says **"Walk-only from here — no stop within 800 m."**
-   Never an error state; an honest small answer.
+   disc and the readout says **"Walk-only from here — no transit reachable
+   within the hour."** Never an error state; an honest small answer.
+4. Clicking outside the covered area (beyond the feed's stop bbox + walking
+   margin): the pin stays exactly where tapped — never silently moved — and
+   the readout says **"Outside the covered area for this feed."** with the
+   bands cleared.
 
 ### F3 — Change departure time
 1. Drag the time slider (00:00–23:59, 5-min steps) or type into the
@@ -103,9 +107,10 @@ one control card, one brand chip. The personality lives in three choices:
 
 | State | Treatment |
 |---|---|
-| Engine loading (tier 3) | Dial shows a slim progress line: "Loading timetable · 4.9 MB" with real progress. Map fully interactive for pan/zoom; clicks queue (pin drops immediately, bands render when ready — determinate spinner ring around the pin). |
+| Engine loading (tier 3) | Dial shows a slim progress line: "Loading timetable · N MB" (N from the manifest's real gzBytes) with real progress. Map fully interactive for pan/zoom; clicks queue (pin drops immediately, bands render when ready — determinate spinner ring around the pin). |
 | Computing | Bands at 35% opacity + pin pulse (≤ 150 ms typical, so this mostly isn't seen). Respect `prefers-reduced-motion`: no pulse, opacity step only. |
 | Transit desert | Walk-only disc + readout line as in F2.3. |
+| Out of coverage | Pin stays put, bands cleared, readout line as in F2.4. |
 | Basemap outage | Style falls back per research (PMTiles extract → graticule). Bands and controls unaffected. A quiet toast: "Base map unavailable — showing reachability only." |
 | Data note | An ⓘ button on the dial opens a small panel: feed name/version/date, ODbL attribution, known gaps (community feed, headway-derived metro times, no suburban rail, N skipped rows), and the walking-model constants. Honesty is a feature. |
 

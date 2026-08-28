@@ -81,6 +81,8 @@ computed from the real published timetable.
 - Feed defects handled in the pipeline (skip + count malformed rows; evaluate
   the `"test "` service in the spike; calendar/feed_info mismatch → calendar
   governs). Any change in the upstream feed re-runs the same gates.
-- OpenFreeMap basemap has no SLA → PMTiles fallback wired per research.
+- OpenFreeMap basemap has no SLA → MVP mitigation is the graticule-only
+  mode (ADR-008); a PMTiles self-host is a documented, unbuilt contingency
+  gated on the stage-13 Range-request check.
 - All platform limits verified against Vercel Hobby (see research §3); the
   design keeps the hot path 100% static.

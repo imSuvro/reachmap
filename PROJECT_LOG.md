@@ -15,8 +15,8 @@ conventional commits, merge to `main`, annotated tag `stage-NN` on completion.
 | 2 | Product definition (PRD) | Product Owner | **done** 2026-08-29 | stage-02 |
 | 3 | Feasibility spike | Architect | **done** 2026-08-29 | stage-03 |
 | 4 | UX | UX Designer | **done** 2026-08-29 | stage-04 |
-| 5 | Architecture (ADRs) | Architect | in progress | |
-| 6 | Planning (backlog) | Product Owner | pending | |
+| 5 | Architecture (ADRs) | Architect | **done** 2026-08-29 | stage-05 |
+| 6 | Planning (backlog) | Product Owner | in progress | |
 | 7 | Repo + CI | DevOps | pending | |
 | 8 | Data pipeline | Dev | pending | |
 | 9 | Core engine | Dev | pending | |
@@ -63,6 +63,45 @@ Environment verified: Node 22.22.3 (nvm4w), pnpm, git 2.54, gh CLI
 authenticated as imSuvro (scopes repo+workflow), Java 17 (runs the official
 MobilityData gtfs-validator), Docker available. Vercel via authenticated MCP
 connector (team `suvros-projects`, hobby).
+
+### Stage 5 — Architecture (done 2026-08-29, tag stage-05)
+
+Ten ADRs in `docs/adr/` (see its README for the index) + full data
+contracts in `docs/contracts.md` (binary container byte layout, manifest
+schema, worker protocol, city-config type, serving/caching rules). Both
+skills invoked (`engineering:architecture`, `engineering:system-design`).
+
+**Adversarial verification** (two hostile review agents over the ADR set
+and the contracts) surfaced **21 real findings, 4 blockers** — all fixed:
+
+- `day.tripBits` trip-numbering domain was ambiguous → pinned to the
+  post-renumbering `conn.tripIdx` domain with a build assertion. (Would
+  have produced silently wrong isochrones.)
+- Sidecars shared the container's content hash → each hashed file now
+  hashes its own bytes; `configHash` embedded in the container.
+- The two-pass after-midnight scan **broke CSA's ascending-departure
+  invariant** (a Sunday 29:15 arrival could never board a Monday 05:30
+  departure) → ADR-006 now mandates a merged two-cursor scan; spike noted
+  as carrying the flaw so the engine must not inherit it.
+- Poster-WebP LCP had no viable $0 toolchain (native MapLibre needs GL
+  system libs; Chromium puts live tile fetches on the deploy path) →
+  poster is now Node-rendered (sharp SVG→WebP) from the precomputed
+  default isochrone; pipeline runs locally and `public/data/` is committed.
+- ADR-004 rested on an estimate → closed by a **stage-3b micro-spike**
+  (`spike/iso-spike.ts`) on the real feed: 200 m grid (327×524) fill 10 ms
+  + contour 20 ms + serialize 2 ms ≈ **32 ms**; GeoJSON 84 KB raw/17 KB gz
+  → **no simplification in v1**, nesting stays exact; total click ≈ 33 ms.
+- Plus: walking asymmetry removed (origin seeds the full walk horizon, no
+  800 m cap), out-of-coverage clicks answered explicitly (never clamped),
+  `defaultView.zoom` added so the poster cross-fade cannot jump,
+  representative dates anchored to `config.referenceDate` (build
+  reproducibility), Monday-reads-Sunday modular wrap written into ADR-006,
+  band units unified (seconds everywhere), worker errors carry query ids,
+  deploy-race manifest retry specified, sanitization switched from lossy
+  stripping to control-char removal + render-as-text, manifest gained
+  map style/attribution/dataNotes/horizonSec, research.md's stale service
+  count and bbox corrected, ADR-008/PRD honesty fix (MVP ladder is
+  OpenFreeMap → graticule; PMTiles is unbuilt contingency).
 
 ### Stage 4 — UX (done 2026-08-29, tag stage-04)
 
