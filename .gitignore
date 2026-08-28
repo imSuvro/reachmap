@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+
+# vercel
+.vercel/
+
+# testing
+coverage/
+playwright-report/
+test-results/
+.lighthouseci/
+
+# pipeline caches (raw GTFS zips + validator output are re-downloadable, never committed)
+pipeline/.cache/
+spike/.cache/
+
+# tooling
+*.tsbuildinfo
+.eslintcache
+
+# env
+.env
+.env.*
+!.env.example
+
+# os
+Thumbs.db
+.DS_Store
