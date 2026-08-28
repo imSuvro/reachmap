@@ -72,7 +72,8 @@ export interface MapViewProps {
   computing: boolean;
   onSelectOrigin(lat: number, lon: number): void;
   onMapShown(): void;
-  onBasemapLost(): void;
+  /** fatal=true: the map itself could not initialize (no WebGL) */
+  onBasemapLost(fatal: boolean): void;
 }
 
 export function MapView(props: MapViewProps) {
@@ -92,14 +93,27 @@ export function MapView(props: MapViewProps) {
   useEffect(() => {
     if (!divRef.current || mapRef.current) return;
     const dv = manifest.defaultView;
-    const map = new MlMap({
-      container: divRef.current,
-      style: manifest.map.styleUrl,
-      center: [dv.lon, dv.lat],
-      zoom: dv.zoom,
-      attributionControl: { compact: false, customAttribution: manifest.feed.attributionHtml },
-    });
+    let map: MlMap;
+    try {
+      map = new MlMap({
+        container: divRef.current,
+        style: manifest.map.styleUrl,
+        center: [dv.lon, dv.lat],
+        zoom: dv.zoom,
+        attributionControl: { compact: false, customAttribution: manifest.feed.attributionHtml },
+      });
+    } catch (e) {
+      // WebGL unavailable (old device, GPU-less browser): keep the poster and
+      // the shell alive instead of white-screening the whole app
+      console.warn("map init failed", e);
+      propsRef.current.onBasemapLost(true);
+      return;
+    }
     mapRef.current = map;
+    const styleLoadedRef = { current: false };
+    map.once("styledata", () => {
+      styleLoadedRef.current = true;
+    });
 
     const pinEl = document.createElement("div");
     pinEl.className = "pin";
@@ -139,8 +153,12 @@ export function MapView(props: MapViewProps) {
       propsRef.current.onMapShown();
     });
     map.on("error", (e: MlErrorEvent) => {
-      // style/tile failure before load -> graticule fallback (ADR-008)
-      if (!loadedRef.current && !fallbackRef.current) {
+      // Graticule fallback (ADR-008) ONLY when the STYLE itself failed to
+      // load. Per-tile/sprite/glyph failures also fire map-level `error`
+      // before `load` — a single transient tile 404 must not permanently
+      // degrade the basemap (stage-12 review finding, verified against
+      // maplibre-gl source).
+      if (!styleLoadedRef.current && !fallbackRef.current) {
         fallbackRef.current = true;
         const fb = manifest.map.styleFallback;
         map.setStyle(fb ? fb : GRATICULE_STYLE);
@@ -148,7 +166,7 @@ export function MapView(props: MapViewProps) {
           loadedRef.current = true;
           addLayers();
           propsRef.current.onMapShown();
-          propsRef.current.onBasemapLost();
+          propsRef.current.onBasemapLost(false);
         });
       } else if (process.env.NODE_ENV !== "production") {
         console.warn("map error", e.error);

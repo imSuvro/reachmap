@@ -34,6 +34,23 @@ export function App({ manifest }: { manifest: Manifest }) {
   const [hint, setHint] = useState(true);
   const [posterVisible, setPosterVisible] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
+  const [mountMap, setMountMap] = useState(false);
+  const mapFailedRef = useRef(false);
+
+  // tier 2 deferral: MapLibre's ~900 ms of script evaluation stays off the
+  // measured main-thread window (the poster IS the view until then)
+  useEffect(() => {
+    const arm = () => {
+      const ric = window.requestIdleCallback as typeof window.requestIdleCallback | undefined;
+      if (typeof ric === "function") ric(() => setMountMap(true), { timeout: 2000 });
+      else window.setTimeout(() => setMountMap(true), 300);
+    };
+    if (document.readyState === "complete") arm();
+    else {
+      window.addEventListener("load", arm, { once: true });
+      return () => window.removeEventListener("load", arm);
+    }
+  }, []);
 
   const workerRef = useRef<Worker | null>(null);
   const readyRef = useRef(false);
@@ -60,7 +77,11 @@ export function App({ manifest }: { manifest: Manifest }) {
   const dispatchQuery = useCallback(
     (lat: number, lon: number, wd: number, dep: number) => {
       const w = workerRef.current;
-      if (!w) return;
+      // pre-ready interactions only update state (the pin still moves); the
+      // on-ready effect dispatches the LATEST state exactly once — posting
+      // now would pin the computing dim for the whole download AND produce a
+      // redundant second compute at ready (stage-12 review findings)
+      if (!w || !readyRef.current) return;
       const id = ++qidRef.current;
       pendingRef.current = id;
       setComputing(true);
@@ -71,9 +92,23 @@ export function App({ manifest }: { manifest: Manifest }) {
 
   const ensureWorker = useCallback(() => {
     if (workerRef.current) return;
-    const w = new Worker(new URL("../workers/iso.worker.ts", import.meta.url));
+    let w: Worker;
+    try {
+      w = new Worker(new URL("../workers/iso.worker.ts", import.meta.url));
+    } catch (e) {
+      setEngineState({ phase: "failed", loaded: 0, total: 0, message: String(e) });
+      return;
+    }
     workerRef.current = w;
     setEngineState({ phase: "loading", loaded: 0, total: manifest.artifact.gzBytes });
+    // a worker-script failure (404 after a redeploy, CSP, OOM kill) surfaces
+    // as an error EVENT, never a message — without this the UI hangs at 0%
+    w.onerror = () => {
+      setEngineState({ phase: "failed", loaded: 0, total: 0, message: "worker failed to start" });
+    };
+    w.onmessageerror = () => {
+      setEngineState({ phase: "failed", loaded: 0, total: 0, message: "worker message error" });
+    };
     w.onmessage = (ev: MessageEvent<WorkerOut>) => {
       const m = ev.data;
       if (m.type === "progress") {
@@ -101,9 +136,13 @@ export function App({ manifest }: { manifest: Manifest }) {
   }, [manifest]);
 
   // the poster must never be able to cover a working map indefinitely: if the
-  // map's load event is delayed (throttled tab, suspended rAF), fade anyway
+  // map's load event is delayed (throttled tab, suspended rAF), fade anyway —
+  // unless the map failed to initialize at all, in which case the poster IS
+  // the most honest view we have and must stay
   useEffect(() => {
-    const t = window.setTimeout(() => setPosterVisible(false), 8000);
+    const t = window.setTimeout(() => {
+      if (!mapFailedRef.current) setPosterVisible(false);
+    }, 8000);
     return () => window.clearTimeout(t);
   }, []);
 
@@ -147,6 +186,25 @@ export function App({ manifest }: { manifest: Manifest }) {
     [origin, ensureWorker, dispatchQuery],
   );
 
+  // deterministic e2e seam: lets Playwright place the origin at exact
+  // coordinates (a pixel click cannot reliably hit a transit desert or the
+  // coverage boundary at an arbitrary zoom)
+  useEffect(() => {
+    const w = window as unknown as {
+      __rmSelect?: (lat: number, lon: number) => void;
+      __rmState?: () => { stats: QueryStats | null; bandPolys: number[] | null };
+    };
+    w.__rmSelect = (lat, lon) => onSelectOrigin(lat, lon);
+    w.__rmState = () => ({
+      stats,
+      bandPolys: geojson ? geojson.features.map((f) => f.geometry.coordinates.length) : null,
+    });
+    return () => {
+      delete w.__rmSelect;
+      delete w.__rmState;
+    };
+  }, [onSelectOrigin, stats, geojson]);
+
   const readout = useMemo(() => {
     const coords = `${origin.lat.toFixed(4)}, ${origin.lon.toFixed(4)}`;
     if (stats?.outOfCoverage) return { coords, note: "Outside the covered area for this feed." };
@@ -157,16 +215,21 @@ export function App({ manifest }: { manifest: Manifest }) {
 
   return (
     <div className="stage">
-      <MapView
-        manifest={manifest}
-        origin={origin}
-        geojson={geojson}
-        highlight={highlight}
-        computing={computing}
-        onSelectOrigin={onSelectOrigin}
-        onMapShown={() => setPosterVisible(false)}
-        onBasemapLost={() => setToast("Base map unavailable — showing reachability only.")}
-      />
+      {mountMap && (
+        <MapView
+          manifest={manifest}
+          origin={origin}
+          geojson={geojson}
+          highlight={highlight}
+          computing={computing}
+          onSelectOrigin={onSelectOrigin}
+          onMapShown={() => setPosterVisible(false)}
+          onBasemapLost={(fatal) => {
+            if (fatal) mapFailedRef.current = true;
+            setToast("Base map unavailable — showing reachability only.");
+          }}
+        />
+      )}
       {manifest.poster && (
         // the poster is a build-time-optimized static WebP with explicit
         // dimensions (ADR-007); next/image would add a runtime optimizer for no gain

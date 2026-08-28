@@ -40,7 +40,9 @@ export function Dial(p: DialProps) {
       const h = Number(m[1]);
       const min = Number(m[2]);
       if (h > 23 || min > 59) return;
-      p.onChange(p.weekday, h * 3600 + min * 60);
+      const dep = h * 3600 + min * 60;
+      if (dep === p.depSec) return; // Enter-then-blur must not double-dispatch
+      p.onChange(p.weekday, dep);
     },
     [p],
   );

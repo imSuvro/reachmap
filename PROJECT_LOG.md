@@ -22,8 +22,8 @@ conventional commits, merge to `main`, annotated tag `stage-NN` on completion.
 | 9 | Core engine | Dev | **done** 2026-08-30 | stage-09 |
 | 10 | Frontend | Dev | **done** 2026-08-30 | stage-10 |
 | 11 | API/glue (serving) | Dev | **done** 2026-08-30 | stage-11 |
-| 12 | Testing | QA | in progress | |
-| 13 | Deploy | DevOps | pending | |
+| 12 | Testing | QA | **done** 2026-08-30 | stage-12 |
+| 13 | Deploy | DevOps | in progress | |
 | 14 | Launch | Product Owner | pending | |
 
 ## NEEDS-HUMAN
@@ -63,6 +63,61 @@ Environment verified: Node 22.22.3 (nvm4w), pnpm, git 2.54, gh CLI
 authenticated as imSuvro (scopes repo+workflow), Java 17 (runs the official
 MobilityData gtfs-validator), Docker available. Vercel via authenticated MCP
 connector (team `suvros-projects`, hobby).
+
+### Stage 12 — Testing (done 2026-08-30, tag stage-12)
+
+Strategy doc: `docs/testing.md` (engineering:testing-strategy invoked).
+New assets: Playwright config (desktop + Pixel-7 projects), 9 e2e scenarios,
+`scripts/lighthouse-gate.mjs` (self-contained, best-of-2, Playwright's
+Chromium), `scripts/check-budgets.mjs`, all wired into the required CI job.
+
+**Gates at close: 51 unit/property/oracle · 8/8 e2e (zero console errors)
+· 6/6 budgets · Lighthouse performance 91 (mobile preset).**
+
+Getting Lighthouse over 90 surfaced real product findings, not test tuning:
+the page CRASHED under the gate's `--disable-gpu` flag (MapLibre throws
+without WebGL → Next error screen scored 82 as if healthy) → the app now
+survives WebGL-less browsers (poster stays, toast shows); the full-viewport
+poster is **excluded from LCP by Chrome's background-image heuristic**, so
+LCP fell to hint text re-painted at font-swap (4.7 s) → fonts now
+`display: optional` and the MapLibre mount deferred past load+idle
+(TBT 670→260 ms, LCP 4.7→2.6 s). A stale `next start` serving a previous
+build also explained the stage-10 "module script" console mystery — e2e
+asserts zero console errors on a clean server. Playwright also caught a
+genuine CSS bug: maplibre-gl.css's `.maplibregl-map{position:relative}`
+beat `.map{position:absolute}` in the cascade → the map collapsed to a
+clipped 1280×300 canvas; fixed with a parent-scoped selector.
+
+**engineering:code-review (full codebase, 3 hostile reviewers → 15
+verifiers over the stage-10..12 surface; pipeline/engine were reviewed at
+their own stages): ~13 confirmed findings, all fixed:**
+
+- Worker deploy-race recovery discarded the fresh manifest → new artifact
+  bytes decoded under stale config, silently wrong geometry. Fixed (fresh
+  manifest adopted) + a **configHash cross-check** (artifact vs manifest)
+  turns any mixed deployment into a loud fatal error.
+- No worker `onerror`/`onmessageerror` → eternal "Loading · 0%" on a worker
+  script 404/CSP/OOM. Fixed + constructor guarded.
+- Graticule fallback fired on ANY pre-load map error — including a single
+  transient tile 404 (verified against maplibre-gl internals). Now gated on
+  the style itself failing.
+- Pre-ready clicks pinned the computing dim for the whole 6 MB download and
+  double-computed at ready. Now: pre-ready interactions only move state;
+  the on-ready effect dispatches the latest view exactly once.
+- Poster cross-fade jumped scale on every viewport ≠ 1200×630
+  (`object-fit: cover` broke the shared-camera premise) → `object-fit: none`
+  keeps 1 poster px = 1 map px.
+- WebGL-fail path: the 8 s poster fallback no longer strips the poster when
+  the map never initialized (the poster is the honest view then).
+- Worker progress posts coalesced (was one React commit per network chunk);
+  duplicate Enter-then-blur time commits guarded; lighthouse-gate now kills
+  its server process TREE (Windows taskkill /T) and survives a 0-score run;
+  budgets check contract-completeness before dereferencing it.
+
+Rejected by verification (recorded so they aren't re-litigated): per-chunk
+progress as a TBT threat (TBT counts >50 ms tasks only), `toRings` on the
+main thread (~9–20 ms, meets budget), React 19 unmount-setState (no-op),
+budgets file-count semantics (existence checks already pin the set).
 
 ### Stage 11 — API/glue: serving (done 2026-08-30, tag stage-11)
 

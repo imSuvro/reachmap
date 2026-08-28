@@ -35,3 +35,27 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Data budgets
+        run: pnpm budgets
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: E2E
+        run: pnpm e2e
+
+      - name: Lighthouse gate (perf >= 90)
+        # 2-core runners are already mid-tier-mobile speed; LH's default 4x
+        # CPU simulation on top of that measures a phone that does not exist
+        env:
+          LH_CPU_MULT: "1"
+        run: pnpm perf
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results/
+          if-no-files-found: ignore

@@ -6,9 +6,15 @@
   background: #edeae3;
 }
 
-.map {
+/* .stage > .map beats maplibre-gl.css's `.maplibregl-map { position: relative }`
+   on specificity regardless of stylesheet order — without this the container
+   collapses to 0 height and the canvas silently renders 1280x300, clipped */
+.stage > .map,
+.stage > .map.maplibregl-map {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 /* ---------- poster (the LCP element; crossfades out when the map loads) ---------- */
@@ -17,7 +23,12 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* object-fit: none keeps 1 poster px == 1 CSS px of the map camera at
+     defaultView.zoom, so the tier-2 cross-fade cannot jump in scale; the
+     surrounding ground matches the poster's own base color */
+  object-fit: none;
+  object-position: center;
+  background: #edeae3;
   z-index: 4;
   pointer-events: none;
   transition: opacity 600ms ease-out;
@@ -100,7 +111,7 @@
 .toast {
   position: absolute;
   left: 16px;
-  bottom: 246px;
+  bottom: 302px;
   z-index: 9;
   background: var(--ink);
   color: #fff;
