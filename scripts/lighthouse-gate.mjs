@@ -70,10 +70,23 @@ try {
   let result = null;
   let score = 0;
   for (let attempt = 0; attempt < 2; attempt++) {
+    // LH's mobile preset assumes a FAST host and simulates a mid-tier phone
+    // via a 4x CPU multiplier. A 2-core CI runner is already roughly that
+    // phone, so CI sets LH_CPU_MULT=1 (Lighthouse's own calibration
+    // guidance: tune cpuSlowdownMultiplier to the host machine).
+    const cpuMult = Number(process.env.LH_CPU_MULT ?? 4);
     const r = await lighthouse(URL, {
       port: chrome.port,
       onlyCategories: ["performance"],
       output: "json",
+      throttling: {
+        rttMs: 150,
+        throughputKbps: 1638.4,
+        requestLatencyMs: 562.5,
+        downloadThroughputKbps: 1474.56,
+        uploadThroughputKbps: 675,
+        cpuSlowdownMultiplier: cpuMult,
+      },
     });
     const s = r.lhr.categories.performance.score ?? 0;
     console.log(`run ${attempt + 1}: ${Math.round(s * 100)}`);
