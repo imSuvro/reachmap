@@ -21,8 +21,8 @@ conventional commits, merge to `main`, annotated tag `stage-NN` on completion.
 | 8 | Data pipeline | Dev | **done** 2026-08-30 | stage-08 |
 | 9 | Core engine | Dev | **done** 2026-08-30 | stage-09 |
 | 10 | Frontend | Dev | **done** 2026-08-30 | stage-10 |
-| 11 | API/glue (serving) | Dev | in progress | |
-| 12 | Testing | QA | pending | |
+| 11 | API/glue (serving) | Dev | **done** 2026-08-30 | stage-11 |
+| 12 | Testing | QA | in progress | |
 | 13 | Deploy | DevOps | pending | |
 | 14 | Launch | Product Owner | pending | |
 
@@ -63,6 +63,24 @@ Environment verified: Node 22.22.3 (nvm4w), pnpm, git 2.54, gh CLI
 authenticated as imSuvro (scopes repo+workflow), Java 17 (runs the official
 MobilityData gtfs-validator), Docker available. Vercel via authenticated MCP
 connector (team `suvros-projects`, hobby).
+
+### Stage 11 — API/glue: serving (done 2026-08-30, tag stage-11)
+
+No server code — by design there was nothing to build here beyond the
+`next.config.ts` headers written at stage 7; this stage **verified the
+whole contract §5 on the real Vercel edge** (the stage-10 PR's preview
+deployment):
+
+| Check | Result |
+|---|---|
+| `manifest.json` | `Cache-Control: public, max-age=300, must-revalidate` + gzip on the wire (JSON is on Vercel's compression allowlist) ✓ |
+| `timetable.<sha8>.bin.gz` | **Opaque**: no `Content-Encoding`, `Content-Length: 6,358,920` (exactly the gz bytes — the DecompressionStream design confirmed), `max-age=31536000, immutable`, `Accept-Ranges: bytes` ✓ |
+| Range request on the artifact | **`206 Partial Content`, `Content-Range: bytes 0-16383/6358920`** — the ADR-008 precondition for the PMTiles contingency PASSES on Vercel, recorded ✓ |
+| `default-iso.geojson` / `poster.webp` | immutable year cache; geojson gzip-compressed ✓ |
+
+The research-flagged risk (Vercel never compresses octet-stream; self-set
+`Content-Encoding` unreliable) is thereby confirmed handled: the artifact
+crosses the wire at 6.36 MB as opaque bytes and inflates in the worker.
 
 ### Stage 10 — Frontend (done 2026-08-30, tag stage-10)
 
