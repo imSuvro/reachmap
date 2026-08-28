@@ -16,8 +16,8 @@ conventional commits, merge to `main`, annotated tag `stage-NN` on completion.
 | 3 | Feasibility spike | Architect | **done** 2026-08-29 | stage-03 |
 | 4 | UX | UX Designer | **done** 2026-08-29 | stage-04 |
 | 5 | Architecture (ADRs) | Architect | **done** 2026-08-29 | stage-05 |
-| 6 | Planning (backlog) | Product Owner | in progress | |
-| 7 | Repo + CI | DevOps | pending | |
+| 6 | Planning (backlog) | Product Owner | **done** 2026-08-29 | stage-06 |
+| 7 | Repo + CI | DevOps | in progress | |
 | 8 | Data pipeline | Dev | pending | |
 | 9 | Core engine | Dev | pending | |
 | 10 | Frontend | Dev | pending | |
@@ -63,6 +63,13 @@ Environment verified: Node 22.22.3 (nvm4w), pnpm, git 2.54, gh CLI
 authenticated as imSuvro (scopes repo+workflow), Java 17 (runs the official
 MobilityData gtfs-validator), Docker available. Vercel via authenticated MCP
 connector (team `suvros-projects`, hobby).
+
+### Stage 6 — Backlog (done 2026-08-29, tag stage-06)
+
+`docs/backlog.md`: six milestones (M0 rails → M1 pipeline → M2 engine →
+M3 product → M4 proven → M5 live), each with an explicit exit condition and
+dependency note; M1/M2 interleaving (default-iso needs the engine) called
+out rather than hidden. Not-doing list carried from the PRD.
 
 ### Stage 5 — Architecture (done 2026-08-29, tag stage-05)
 
