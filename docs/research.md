@@ -73,8 +73,11 @@ Why it wins:
    stamps this feed with Delhi's IIITD terms — that is a **catalog error**;
    the publisher's own statement governs.) A public repo that redistributes a
    compiled timetable artifact needs exactly this.
-2. **Its calendar covers today** (five services, 2024-05-01 → 2030-05-01) —
-   the only ladder-order feed that routes out of the box.
+2. **Its calendar covers today** — the only ladder-order feed that routes
+   out of the box. *(Corrected after the stage-3 spike: the calendar holds
+   **9 service rows**, windows 2024-05-01 → 2030-05-01 plus a 2026-only
+   `weekday` row; only `Regular` (46,973 trips, all days) and `HSC`
+   (74 trips, Mon–Sat) carry any trips.)*
 3. shapes.txt present; 5,625 stops fits Uint16 indexing with 10× headroom;
    1.36 M stop_times ≈ 1.31 M connections ≈ 18 MB raw artifact (pre-gzip) —
    inside every budget.
@@ -168,12 +171,26 @@ serverless function; all artifact responses carry
 ## 4. City decision record
 
 **Chennai, India** (MTC bus + CMRL metro, unified community feed, ODbL).
-Timezone `Asia/Kolkata` (UI label "IST"). Working bbox ~12.80–13.25 N,
-80.00–80.35 E. All city-specific values land in `config/city.ts` (ADR-009);
+Timezone `Asia/Kolkata` (UI label "IST"). Stop bbox **measured by the
+stage-3 spike: 12.6148–13.4904 N, 79.8019–80.3358 E** (~97 km N–S — twice
+the working assumption first noted here, which is why the coverage bbox is
+*derived from stop data at build*, never hand-typed; see contracts.md §2).
+All city-specific values land in `config/city.ts` (ADR-009);
 a future city switch (e.g. BMTC if licensed, or a fresh Kolkata feed if one
 ever appears) is a one-file change re-gated by this scorecard.
 
 ---
+
+## 5. Lighthouse LCP candidacy (platform fact for ADR-007)
+
+Per the Chrome/web.dev definition, LCP considers `<img>` (incl. inside
+`<svg>` as `<image>`), `<video>` poster frames, elements with a CSS
+`background-image` via `url()`, and text-containing block elements. A
+`<canvas>` is **not** an LCP candidate, and neither are inline `<svg>`
+shapes — which is why the map canvas can never be trusted to be the LCP
+element and the default-view poster must ship as an `<img>`
+(fetchpriority=high, explicit dimensions). Source: web.dev/articles/lcp
+("What elements are considered?"), checked 2026-08-29.
 
 ## Key sources
 
