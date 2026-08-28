@@ -12,8 +12,8 @@ conventional commits, merge to `main`, annotated tag `stage-NN` on completion.
 | # | Stage | Role | Status | Tag |
 |---|---|---|---|---|
 | 1 | Research | Product Owner | **done** 2026-08-29 | stage-01 |
-| 2 | Product definition (PRD) | Product Owner | in progress | |
-| 3 | Feasibility spike | Architect | pending | |
+| 2 | Product definition (PRD) | Product Owner | **done** 2026-08-29 | stage-02 |
+| 3 | Feasibility spike | Architect | in progress | |
 | 4 | UX | UX Designer | pending | |
 | 5 | Architecture (ADRs) | Architect | pending | |
 | 6 | Planning (backlog) | Product Owner | pending | |
@@ -63,6 +63,17 @@ Environment verified: Node 22.22.3 (nvm4w), pnpm, git 2.54, gh CLI
 authenticated as imSuvro (scopes repo+workflow), Java 17 (runs the official
 MobilityData gtfs-validator), Docker available. Vercel via authenticated MCP
 connector (team `suvros-projects`, hobby).
+
+### Stage 2 — PRD (done 2026-08-29, tag stage-02)
+
+`docs/PRD.md`. Core question, two audiences (Chennai residents making
+location decisions; engineers reading the portfolio), MVP scope (one city,
+click-anywhere, day+time picker, 15/30/45/60 bands, zero-interaction default
+state at Chennai Central weekday 08:30 IST), seven measurable success
+criteria mapped to stage gates, and an explicit out-of-scope list. Product
+decisions recorded: bands are door-to-door, day picker is a weekday selector
+(matches what the data actually models), honesty footer with ODbL
+attribution and known gaps.
 
 ### Stage 1 — Research (done 2026-08-29, tag stage-01)
 
