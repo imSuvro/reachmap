@@ -1,0 +1,309 @@
+<title>ReachMap Mockup</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  /* ReachMap hi-fi mockup — the app screen itself. Deliberately single-theme:
+     the product commits to a light cartographic ground (positron basemap),
+     so every colour here is painted explicitly and holds on any host theme. */
+  :root{
+    --ink:#1B1B2F; --paper:#FBF9F5; --muted:#6E6E85; --accent:#00897B;
+    --band15:#FFB300; --band30:#F4511E; --band45:#C2185B; --band60:#4527A0;
+    --land:#EDEAE3; --sea:#D8E4E8; --street:#DFDCD4; --arterial:#D0CCC2;
+    --shadow:0 2px 12px rgba(27,27,47,.14);
+    --ui:"IBM Plex Sans",system-ui,sans-serif;
+    --disp:"IBM Plex Sans Condensed","Arial Narrow",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0}
+  html,body{height:100%}
+  body{background:var(--land);color:var(--ink);font-family:var(--ui);overflow:hidden}
+  .stage{position:fixed;inset:0}
+  canvas{position:absolute;inset:0;width:100%;height:100%}
+  /* ---------- origin pin ---------- */
+  .pin{position:absolute;width:18px;height:18px;transform:translate(-50%,-50%);z-index:5}
+  .pin::before{content:"";position:absolute;inset:0;border-radius:50%;background:var(--ink);border:3.5px solid #fff;box-shadow:0 1px 6px rgba(27,27,47,.4)}
+  .pin::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:2px solid rgba(27,27,47,.35);animation:pulse 1.6s ease-out infinite}
+  @keyframes pulse{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.5);opacity:0}}
+  @media (prefers-reduced-motion:reduce){.pin::after{animation:none;opacity:.35}}
+  /* ---------- brand chip ---------- */
+  .brand{position:absolute;top:16px;left:16px;background:var(--paper);border-radius:14px;
+    box-shadow:var(--shadow);padding:10px 16px 11px;z-index:10}
+  .brand h1{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:.2px;line-height:1.1}
+  .brand span{font-size:12px;color:var(--muted);font-weight:500}
+  /* ---------- mockup tag ---------- */
+  .tag{position:absolute;top:16px;right:16px;z-index:10;background:var(--ink);color:var(--paper);
+    font-family:var(--mono);font-size:11px;padding:6px 10px;border-radius:999px;letter-spacing:.4px}
+  /* ---------- hint ---------- */
+  .hint{position:absolute;left:16px;bottom:212px;z-index:9;background:var(--ink);color:#fff;
+    font-size:13px;font-weight:500;padding:8px 13px;border-radius:10px;box-shadow:var(--shadow)}
+  .hint::after{content:"";position:absolute;left:24px;bottom:-6px;border:6px solid transparent;border-top-color:var(--ink);border-bottom:0}
+  /* ---------- the dial ---------- */
+  .dial{position:absolute;left:16px;bottom:16px;width:320px;background:var(--paper);
+    border-radius:14px;box-shadow:var(--shadow);padding:16px;z-index:10;display:flex;flex-direction:column;gap:12px}
+  .days{display:flex;gap:6px}
+  .days button{flex:1;height:32px;border:1px solid #E3E0D8;background:#fff;border-radius:999px;
+    font-family:var(--ui);font-weight:600;font-size:12.5px;color:var(--muted);cursor:pointer}
+  .days button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .days button:focus-visible,.slider:focus-visible,.info:focus-visible,.seg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .timerow{display:flex;align-items:baseline;gap:10px}
+  .timerow label{font-size:12px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+  .time{font-family:var(--mono);font-size:28px;font-weight:500;letter-spacing:.5px;font-variant-numeric:tabular-nums}
+  .ist{font-size:12px;color:var(--muted);font-weight:500}
+  .slider{width:100%;accent-color:var(--ink);height:22px}
+  /* ruler = legend + scale */
+  .ruler{display:flex;border-radius:7px;overflow:hidden;height:30px}
+  .seg{flex:1;display:flex;align-items:center;justify-content:center;border:0;cursor:pointer;
+    font-family:var(--mono);font-size:12px;font-weight:500;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+  .seg:nth-child(1){background:var(--band15);color:#5A3C00;text-shadow:none}
+  .seg:nth-child(2){background:var(--band30)}
+  .seg:nth-child(3){background:var(--band45)}
+  .seg:nth-child(4){background:var(--band60)}
+  .seg.dim{filter:saturate(.25) brightness(1.18)}
+  .readout{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);
+    font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .readout b{color:var(--ink);font-weight:500}
+  .info{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);
+    background:none;font-family:var(--ui);font-weight:600;font-size:13px;line-height:1;cursor:pointer}
+  /* ---------- data note ---------- */
+  .note{position:absolute;left:16px;bottom:16px;width:320px;background:var(--paper);border-radius:14px;
+    box-shadow:var(--shadow);padding:16px;z-index:11;display:none;flex-direction:column;gap:10px;font-size:13px;line-height:1.45}
+  .note.open{display:flex}
+  .note h2{font-family:var(--disp);font-size:16px}
+  .note .mono{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+  .note ul{padding-left:18px;color:var(--muted)}
+  .note a{color:var(--accent)}
+  .note .close{align-self:flex-end;border:0;background:var(--ink);color:var(--paper);border-radius:8px;padding:6px 12px;font-weight:600;cursor:pointer}
+  /* ---------- attribution ---------- */
+  .attrib{position:absolute;right:0;bottom:0;z-index:8;background:rgba(251,249,245,.85);
+    font-size:10.5px;color:var(--muted);padding:3px 8px;border-top-left-radius:8px}
+  .attrib a{color:var(--muted)}
+  /* ---------- mobile: dial becomes bottom sheet ---------- */
+  @media (max-width:767px){
+    .brand span{display:none}
+    .hint{bottom:96px}
+    .dial{left:0;right:0;bottom:0;width:auto;border-radius:16px 16px 0 0;padding-top:8px}
+    .dial::before{content:"";width:36px;height:4px;border-radius:2px;background:#D8D4CB;margin:0 auto 4px}
+    .dial.collapsed .days,.dial.collapsed .sliderwrap,.dial.collapsed .readout{display:none}
+    .note{left:0;right:0;bottom:0;width:auto;border-radius:16px 16px 0 0}
+  }
+</style>
+
+<div class="stage">
+  <canvas id="map" aria-hidden="true"></canvas>
+  <canvas id="bands" aria-hidden="true"></canvas>
+  <div class="pin" id="pin" title="Origin: Chennai Central"></div>
+
+  <header class="brand">
+    <h1>ReachMap</h1>
+    <span>Chennai · MTC bus + CMRL metro</span>
+  </header>
+  <div class="tag">hi-fi mockup · stage 4</div>
+  <div class="hint" id="hint">Tap anywhere on the map to move the origin</div>
+
+  <section class="dial" id="dial" aria-label="Departure controls and legend">
+    <div class="days" role="radiogroup" aria-label="Day of week">
+      <button aria-pressed="false">M</button><button aria-pressed="true">T</button><button aria-pressed="false">W</button><button aria-pressed="false">T</button><button aria-pressed="false">F</button><button aria-pressed="false">S</button><button aria-pressed="false">S</button>
+    </div>
+    <div class="timerow">
+      <label for="slider">Depart</label>
+      <span class="time" id="time">08:30</span><span class="ist">IST · Tue</span>
+    </div>
+    <div class="sliderwrap">
+      <input class="slider" id="slider" type="range" min="0" max="1439" step="5" value="510" aria-label="Departure time">
+    </div>
+    <div class="ruler" aria-label="Travel-time bands, minutes">
+      <button class="seg" data-b="0">15</button><button class="seg" data-b="1">30</button><button class="seg" data-b="2">45</button><button class="seg" data-b="3">60</button>
+    </div>
+    <div class="readout">
+      <span>13.0827, 80.2757 · <b>≈ 2,906 stops</b> in 60 min</span>
+      <button class="info" id="infoBtn" aria-label="About this data">i</button>
+    </div>
+  </section>
+
+  <aside class="note" id="note" aria-label="About this data">
+    <h2>About this data</h2>
+    <p class="mono">chennai-unified-gtfs · v2025.03.25 · ODbL</p>
+    <p>Timetable © <a href="https://github.com/ungalsoththu/ChennaiGTFS">UngalSoththu / Ithu Ungal Soththu</a>, an unofficial community feed. Door-to-door times assume 4.8 km/h walking with a 1.3 detour factor.</p>
+    <ul>
+      <li>Metro times are derived from published headways</li>
+      <li>Suburban rail is not included</li>
+      <li>A small number of malformed feed rows are skipped (count in the build manifest)</li>
+    </ul>
+    <button class="close" id="noteClose">Close</button>
+  </aside>
+
+  <div class="attrib">© <a href="#">OpenFreeMap</a> © <a href="#">OpenMapTiles</a> © <a href="#">OpenStreetMap</a> · Transit © UngalSoththu (ODbL)</div>
+</div>
+
+<script>
+(() => {
+  const mapC = document.getElementById("map"), bandC = document.getElementById("bands");
+  const pin = document.getElementById("pin");
+  const BANDS = [
+    { c: "#FFB300", a: 0.44, f: 0.36 },
+    { c: "#F4511E", a: 0.40, f: 0.62 },
+    { c: "#C2185B", a: 0.36, f: 0.82 },
+    { c: "#4527A0", a: 0.30, f: 1.00 },
+  ];
+  let W, H, DPR, origin, R, highlight = -1;
+
+  // deterministic rng
+  let seed = 20260829;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+
+  const coastX = (y) => W * 0.82 + (y / H) * W * 0.075 + Math.sin(y / 90) * 10;
+
+  function sizes() {
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = innerWidth; H = innerHeight;
+    for (const c of [mapC, bandC]) {
+      c.width = W * DPR; c.height = H * DPR;
+      c.getContext("2d").setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    origin = { x: W * 0.56, y: H * 0.42 };
+    R = Math.min(W, H) * 0.46;
+    pin.style.left = origin.x + "px"; pin.style.top = origin.y + "px";
+  }
+
+  function drawMap() {
+    const g = mapC.getContext("2d");
+    g.clearRect(0, 0, W, H);
+    g.fillStyle = "#EDEAE3"; g.fillRect(0, 0, W, H);
+    // Bay of Bengal
+    g.fillStyle = "#D8E4E8";
+    g.beginPath(); g.moveTo(W, 0);
+    for (let y = 0; y <= H; y += 8) g.lineTo(coastX(y), y);
+    g.lineTo(W, H); g.closePath(); g.fill();
+    // beach line
+    g.strokeStyle = "#E8DFC8"; g.lineWidth = 5;
+    g.beginPath(); for (let y = 0; y <= H; y += 8) g.lineTo(coastX(y), y); g.stroke();
+    // minor street grid (two rotated families)
+    seed = 7;
+    for (const [ang, gap, col, w] of [[0.06, 34, "#DFDCD4", 1], [1.62, 46, "#DFDCD4", 1]]) {
+      g.strokeStyle = col; g.lineWidth = w;
+      const dx = Math.cos(ang), dy = Math.sin(ang), L = Math.hypot(W, H) * 1.4;
+      for (let o = -L; o < L; o += gap) {
+        const jitter = (rnd() - 0.5) * 8;
+        g.beginPath();
+        g.moveTo(W / 2 - dx * L - dy * (o + jitter), H / 2 - dy * L + dx * (o + jitter));
+        g.lineTo(W / 2 + dx * L - dy * (o + jitter), H / 2 + dy * L + dx * (o + jitter));
+        g.stroke();
+      }
+    }
+    // arterials radiating from centre
+    g.strokeStyle = "#D0CCC2"; g.lineWidth = 2.5;
+    for (const a of [0.15, 0.75, 1.5, 2.2, 2.9, 3.6, 4.4, 5.2]) {
+      g.beginPath(); g.moveTo(origin.x, origin.y);
+      let x = origin.x, y = origin.y, dir = a;
+      for (let s = 0; s < 40; s++) {
+        dir += (rnd() - 0.5) * 0.12;
+        x += Math.cos(dir) * 28; y += Math.sin(dir) * 28;
+        if (x > coastX(y) - 6) break;
+        g.lineTo(x, y);
+      }
+      g.stroke();
+    }
+    // Cooum river
+    g.strokeStyle = "#CFE0E4"; g.lineWidth = 7; g.beginPath();
+    let ry = H * 0.36;
+    g.moveTo(0, ry);
+    for (let x = 0; x < W; x += 24) { ry += Math.sin(x / 70) * 9 + (rnd() - 0.5) * 6; g.lineTo(x, ry); if (x > coastX(ry) - 20) break; }
+    g.stroke();
+    // CMRL corridor (dashed teal)
+    g.strokeStyle = "rgba(0,137,123,.55)"; g.lineWidth = 2.5; g.setLineDash([9, 6]);
+    g.beginPath(); g.moveTo(origin.x - R * 0.05, origin.y - R * 0.5);
+    g.quadraticCurveTo(origin.x - R * 0.25, origin.y + R * 0.2, origin.x - R * 0.18, origin.y + R * 0.85);
+    g.stroke(); g.setLineDash([]);
+  }
+
+  // one shared noise profile so rings are strictly nested
+  const harm = Array.from({ length: 5 }, (_, k) => ({ k: k + 2, a: 0.05 + 0.05 * Math.sin(k * 3.7), p: k * 2.1 }));
+  const lobes = [{ th: 2.62, w: 0.5, a: 0.34 }, { th: 1.05, w: 0.42, a: 0.26 }, { th: 4.25, w: 0.6, a: 0.3 }];
+  function radius(theta, f) {
+    let n = 1;
+    for (const h of harm) n += h.a * Math.sin(h.k * theta + h.p);
+    for (const l of lobes) {
+      let d = Math.atan2(Math.sin(theta - l.th), Math.cos(theta - l.th));
+      n += l.a * Math.exp(-(d * d) / (2 * l.w * l.w));
+    }
+    return R * f * n * 0.72;
+  }
+  function bandPath(g, f) {
+    g.beginPath();
+    for (let i = 0; i <= 140; i++) {
+      const th = (i / 140) * Math.PI * 2, r = radius(th, f);
+      const x = origin.x + Math.cos(th) * r, y = origin.y + Math.sin(th) * r * 0.92;
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.closePath();
+  }
+  function drawBands() {
+    const g = bandC.getContext("2d");
+    g.clearRect(0, 0, W, H);
+    g.save();
+    // clip to land — reachability stops at the shore
+    g.beginPath(); g.moveTo(0, 0);
+    for (let y = 0; y <= H; y += 8) g.lineTo(coastX(y), y);
+    g.lineTo(0, H); g.closePath(); g.clip();
+    for (let b = 3; b >= 0; b--) {
+      const { c, a, f } = BANDS[b];
+      const alpha = highlight === -1 || highlight === b ? a : 0.12;
+      if (b > 0) { // ring: erase inner region first? draw outer then punch
+        g.globalAlpha = 1;
+      }
+      g.globalAlpha = alpha; g.fillStyle = c;
+      bandPath(g, f); g.fill();
+      if (b > 0) { // punch out the next-inner band so fills don't stack
+        g.globalCompositeOperation = "destination-out";
+        g.globalAlpha = 1; bandPath(g, BANDS[b - 1].f); g.fill();
+        g.globalCompositeOperation = "source-over";
+      }
+    }
+    // contour strokes
+    for (let b = 0; b < 4; b++) {
+      g.globalAlpha = highlight === -1 || highlight === b ? 0.9 : 0.25;
+      g.strokeStyle = BANDS[b].c; g.lineWidth = 1.5;
+      bandPath(g, BANDS[b].f); g.stroke();
+    }
+    g.restore(); g.globalAlpha = 1;
+  }
+
+  function drawAll() { sizes(); drawMap(); drawBands(); }
+  drawAll();
+  addEventListener("resize", drawAll);
+
+  // ruler hover/tap highlight
+  document.querySelectorAll(".seg").forEach((s) => {
+    const b = +s.dataset.b;
+    const set = (v) => { highlight = v; drawBands();
+      document.querySelectorAll(".seg").forEach((x) => x.classList.toggle("dim", highlight !== -1 && +x.dataset.b !== highlight)); };
+    s.addEventListener("mouseenter", () => set(b));
+    s.addEventListener("mouseleave", () => set(-1));
+    s.addEventListener("click", () => set(highlight === b ? -1 : b));
+  });
+  // day chips (visual only)
+  document.querySelectorAll(".days button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".days button").forEach((b) => b.setAttribute("aria-pressed", "false"));
+      btn.setAttribute("aria-pressed", "true");
+    });
+  });
+  // time slider (visual only)
+  const slider = document.getElementById("slider"), time = document.getElementById("time");
+  slider.addEventListener("input", () => {
+    const m = +slider.value;
+    time.textContent = String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+  });
+  // data note
+  const note = document.getElementById("note"), dial = document.getElementById("dial");
+  document.getElementById("infoBtn").addEventListener("click", () => { note.classList.add("open"); dial.style.visibility = "hidden"; });
+  document.getElementById("noteClose").addEventListener("click", () => { note.classList.remove("open"); dial.style.visibility = "visible"; });
+  // mock: clicking the map moves the pin + origin (bands follow — the one live behavior)
+  mapC.parentElement.addEventListener("click", (e) => {
+    if (e.target !== mapC && e.target !== bandC && e.target !== pin) return;
+    origin = { x: e.clientX, y: e.clientY };
+    pin.style.left = origin.x + "px"; pin.style.top = origin.y + "px";
+    document.getElementById("hint").style.display = "none";
+    drawMap(); drawBands();
+  });
+})();
+</script>

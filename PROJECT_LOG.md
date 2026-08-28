@@ -14,8 +14,8 @@ conventional commits, merge to `main`, annotated tag `stage-NN` on completion.
 | 1 | Research | Product Owner | **done** 2026-08-29 | stage-01 |
 | 2 | Product definition (PRD) | Product Owner | **done** 2026-08-29 | stage-02 |
 | 3 | Feasibility spike | Architect | **done** 2026-08-29 | stage-03 |
-| 4 | UX | UX Designer | in progress | |
-| 5 | Architecture (ADRs) | Architect | pending | |
+| 4 | UX | UX Designer | **done** 2026-08-29 | stage-04 |
+| 5 | Architecture (ADRs) | Architect | in progress | |
 | 6 | Planning (backlog) | Product Owner | pending | |
 | 7 | Repo + CI | DevOps | pending | |
 | 8 | Data pipeline | Dev | pending | |
@@ -63,6 +63,30 @@ Environment verified: Node 22.22.3 (nvm4w), pnpm, git 2.54, gh CLI
 authenticated as imSuvro (scopes repo+workflow), Java 17 (runs the official
 MobilityData gtfs-validator), Docker available. Vercel via authenticated MCP
 connector (team `suvros-projects`, hobby).
+
+### Stage 4 — UX (done 2026-08-29, tag stage-04)
+
+`docs/ux.md` (behavior spec — wins on conflict) plus two published design
+artifacts (sources in `docs/design/`):
+
+- **Hi-fi mockup** — https://claude.ai/code/artifact/262689ac-f92f-470b-a9a3-caee713421d5
+- **Wireframes** — https://claude.ai/code/artifact/33113d05-6ac2-4a0d-b0b4-d0d06d3bcdfa
+
+Design identity: the map is the whole product; "Marina sunset" band ramp
+(marigold → vermilion → silk magenta → deep violet, rendered as set-difference
+rings, monotonic lightness); IBM Plex in three cuts (Condensed = signage,
+Sans = UI, Mono = every number); signature element is **the dial** — one card
+fusing day chips, departure readout/slider, and the band ruler that doubles
+as the legend. Mobile: dial becomes a bottom sheet. States specified for
+engine-loading, computing, transit desert, basemap outage, and the ⓘ data
+note (feed provenance + ODbL + known gaps as first-class UI).
+
+**Review protocol:** artifacts are published for the user's async review;
+non-blocking for stages 5–9 per plan; any feedback lands before stage 10
+(frontend build) begins. Visual QA of the mockup was limited to structural +
+JS syntax checks this session (the embedded browser pane could not display
+or authenticate to the artifact URL); full visual verification happens
+against the real UI in stage 10.
 
 ### Stage 3 — Feasibility spike (done 2026-08-29, tag stage-03)
 
