@@ -1,0 +1,382 @@
+/* ReachMap app chrome — docs/ux.md §5 tokens live in globals.css */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  background: #edeae3;
+}
+
+.map {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---------- poster (the LCP element; crossfades out when the map loads) ---------- */
+.poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 4;
+  pointer-events: none;
+  transition: opacity 600ms ease-out;
+}
+.poster-hidden {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .poster {
+    transition: none;
+  }
+}
+
+/* ---------- origin pin (used by MapLibre marker) ---------- */
+.pin {
+  width: 18px;
+  height: 18px;
+  position: relative;
+}
+.pin::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 3.5px solid #fff;
+  box-shadow: 0 1px 6px rgba(27, 27, 47, 0.4);
+}
+.pin::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  border: 2px solid rgba(27, 27, 47, 0.35);
+  animation: pinpulse 1.6s ease-out infinite;
+}
+@keyframes pinpulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pin::after {
+    animation: none;
+    opacity: 0.35;
+  }
+}
+
+/* ---------- brand chip ---------- */
+.brand {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: var(--paper);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 10px 16px 11px;
+  z-index: 10;
+}
+.brand h1 {
+  font-family: var(--font-display), "Arial Narrow", sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.2px;
+  line-height: 1.1;
+}
+.brand span {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ---------- hint + toast ---------- */
+.hint,
+.toast {
+  position: absolute;
+  left: 16px;
+  bottom: 246px;
+  z-index: 9;
+  background: var(--ink);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 13px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  max-width: 320px;
+}
+.toast {
+  left: auto;
+  right: 16px;
+  bottom: auto;
+  top: 16px;
+}
+
+/* ---------- the dial ---------- */
+.dial,
+.note {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  width: 320px;
+  background: var(--paper);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sheet-handle {
+  display: none;
+  border: 0;
+  background: none;
+  height: 16px;
+  cursor: pointer;
+}
+.sheet-handle::before {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: #d8d4cb;
+  margin: 0 auto;
+}
+.days {
+  display: flex;
+  gap: 6px;
+}
+.days button {
+  flex: 1;
+  height: 32px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  font-family: var(--font-ui), sans-serif;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.days button.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.timerow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.timerow label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.time {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+  border: 0;
+  background: none;
+  width: 92px;
+  color: var(--ink);
+  padding: 0;
+}
+.ist {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.slider {
+  width: 100%;
+  accent-color: var(--ink);
+  height: 22px;
+  margin: 0;
+}
+.ruler {
+  display: flex;
+  border-radius: 7px;
+  overflow: hidden;
+  height: 30px;
+}
+.seg {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.seg-0 {
+  background: var(--band-15);
+  color: #5a3c00;
+  text-shadow: none;
+}
+.seg-1 {
+  background: var(--band-30);
+}
+.seg-2 {
+  background: var(--band-45);
+}
+.seg-3 {
+  background: var(--band-60);
+}
+.seg.dim {
+  filter: saturate(0.25) brightness(1.18);
+}
+.progress {
+  position: relative;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--line);
+  overflow: hidden;
+}
+.progress-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--accent);
+  opacity: 0.25;
+  transition: width 200ms linear;
+}
+.progress-text {
+  position: relative;
+  display: block;
+  text-align: center;
+  font-size: 11.5px;
+  line-height: 22px;
+  color: var(--ink);
+  font-family: var(--font-mono), monospace;
+}
+.progress.error {
+  background: #fdecea;
+  color: #b71c1c;
+  font-size: 12px;
+  text-align: center;
+  line-height: 22px;
+}
+.readout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.readout b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.readout .mono,
+.mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+.info {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  color: var(--accent);
+  background: none;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* ---------- data note ---------- */
+.note {
+  z-index: 11;
+  font-size: 13px;
+  line-height: 1.45;
+  gap: 10px;
+}
+.note h2 {
+  font-family: var(--font-display), sans-serif;
+  font-size: 16px;
+}
+.note .mono {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.note .small {
+  font-size: 11px;
+}
+.note ul {
+  padding-left: 18px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.note a {
+  color: var(--accent);
+}
+.note .close {
+  align-self: flex-end;
+  border: 0;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- attribution stays clear of the dial ---------- */
+.maplibregl-ctrl-bottom-right {
+  z-index: 8;
+}
+
+/* ---------- mobile: dial becomes a bottom sheet ---------- */
+@media (max-width: 767px) {
+  .brand span {
+    display: none;
+  }
+  .hint {
+    bottom: 120px;
+    left: 16px;
+    right: 16px;
+    max-width: none;
+  }
+  .dial,
+  .note {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    border-radius: 16px 16px 0 0;
+    padding-top: 6px;
+  }
+  .sheet-handle {
+    display: block;
+  }
+  .dial.collapsed .days,
+  .dial.collapsed .sliderwrap,
+  .dial.collapsed .readout,
+  .dial.collapsed .progress {
+    display: none;
+  }
+  .dial.collapsed .timerow {
+    margin-bottom: 4px;
+  }
+}

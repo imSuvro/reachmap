@@ -20,8 +20,8 @@ conventional commits, merge to `main`, annotated tag `stage-NN` on completion.
 | 7 | Repo + CI | DevOps | **done** 2026-08-29 | stage-07 |
 | 8 | Data pipeline | Dev | **done** 2026-08-30 | stage-08 |
 | 9 | Core engine | Dev | **done** 2026-08-30 | stage-09 |
-| 10 | Frontend | Dev | in progress | |
-| 11 | API/glue (serving) | Dev | pending | |
+| 10 | Frontend | Dev | **done** 2026-08-30 | stage-10 |
+| 11 | API/glue (serving) | Dev | in progress | |
 | 12 | Testing | QA | pending | |
 | 13 | Deploy | DevOps | pending | |
 | 14 | Launch | Product Owner | pending | |
@@ -63,6 +63,42 @@ Environment verified: Node 22.22.3 (nvm4w), pnpm, git 2.54, gh CLI
 authenticated as imSuvro (scopes repo+workflow), Java 17 (runs the official
 MobilityData gtfs-validator), Docker available. Vercel via authenticated MCP
 connector (team `suvros-projects`, hobby).
+
+### Stage 10 — Frontend (done 2026-08-30, tag stage-10)
+
+The product UI per docs/ux.md + the stage-4 mockup, in
+`src/components/{App,MapView,Dial,DataNote}.tsx`, `src/workers/iso.worker.ts`,
+`src/app/app.css`:
+
+- **Tiered loading (ADR-007):** server-rendered shell with the poster
+  `<img>` as the LCP element (plus an 8 s never-stick fade fallback);
+  MapLibre dynamically imported and cross-faded at the shared camera; the
+  precomputed default isochrone rendered before the engine exists; worker
+  spawned on idle or first interaction, whichever first.
+- **Worker** implements contract §3 exactly: progress events, latest-wins
+  queries, error ids, one cache-bypassing manifest refetch on a 4xx
+  (deploy-race recovery), `DecompressionStream('gzip')` inflate.
+- **Rings** (band[i] − band[i−1]) computed with polygon-clipping — exact
+  set difference, no alpha stacking; per-band fill/line layers with the
+  Marina-sunset tokens; ruler-hover dims other rings via paint properties.
+- **The dial**: day chips (radiogroup), HH:MM input + slider, band ruler
+  legend, live `aria-live` readout, ⓘ data-note panel with ODbL
+  attribution and skipped-row counts; mobile bottom sheet; graticule
+  basemap fallback wired per ADR-008.
+- First-load JS 108 kB raw (≈ 37 kB br — inside the ≤100 KB brotli budget);
+  MapLibre and polygon-clipping live in the deferred map chunk.
+
+**Verified live against the production build** (browser structural checks —
+the embedded pane cannot composite pixels, so visual QA lands with
+Playwright screenshots in stage 12): worker loaded the 6.36 MB artifact and
+answered the default view (readout "≈ 2,909 stops in 60 min" — the live
+engine's number); synthetic map click moved the pin and recomputed
+("≈ 2,685"); Sunday shows the honest −1-stop difference vs Tuesday (the 74
+HSC trips); 23:30 collapses reach to 474 stops (real late-night service);
+attribution renders the ODbL credit. One console note deferred to stage 12:
+a single non-fatal "module script … text/html" error per load with zero
+functional impact — suspected preview-pane injection; Playwright's clean
+Chromium will confirm or refute.
 
 ### Stage 9 — Core engine (done 2026-08-30, tag stage-09)
 
