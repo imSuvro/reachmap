@@ -29,7 +29,9 @@
   },
   "dependencies": {
     "fflate": "^0.8.3",
+    "maplibre-gl": "^6.6.0",
     "next": "^15.5.24",
+    "polygon-clipping": "^0.15.7",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   }

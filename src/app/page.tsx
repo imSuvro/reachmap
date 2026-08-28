@@ -1,14 +1,19 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import type { Manifest } from "../engine/types";
+import { App } from "../components/App";
+import "./app.css";
+
+// Fully static: the manifest is read at build time from the committed data
+// (ADR-007 — Vercel's build is `next build` over committed statics).
+export const dynamic = "force-static";
+
+function loadManifest(): Manifest {
+  const path = join(process.cwd(), "public", "data", "chennai", "manifest.json");
+  return JSON.parse(readFileSync(path, "utf8")) as Manifest;
+}
+
 export default function Home() {
-  // Stage-7 scaffold shell. The map product lands in stage 10 per docs/ux.md.
-  return (
-    <main style={{ display: "grid", placeItems: "center", height: "100%", padding: 24 }}>
-      <div style={{ textAlign: "center", maxWidth: 480 }}>
-        <h1 style={{ fontFamily: "var(--font-display)", fontSize: 32 }}>ReachMap</h1>
-        <p style={{ color: "var(--muted)", marginTop: 8 }}>
-          Where can Chennai&rsquo;s buses and metro take you in an hour? Interactive
-          isochrones are on their way — this is the stage-7 deployment scaffold.
-        </p>
-      </div>
-    </main>
-  );
+  const manifest = loadManifest();
+  return <App manifest={manifest} />;
 }
