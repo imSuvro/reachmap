@@ -18,10 +18,13 @@ export interface EngineConfig {
 
 export class Engine {
   readonly csa: Csa;
+  /** the resolved-config hash baked into the container at build (contract §1) */
+  readonly configHash: string;
   private grid: IsochroneGrid;
 
   constructor(artifact: ArrayBuffer, cfg: EngineConfig) {
     const art = decodeContainer(artifact);
+    this.configHash = art.configHash;
     this.csa = new Csa(art, {
       horizonSec: cfg.horizonSec,
       walking: cfg.walking,
