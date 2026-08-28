@@ -22,6 +22,7 @@
     "d3-contour": "^4.0.2",
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.24",
+    "sharp": "^0.35.4",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^4.1.11"

@@ -29,6 +29,7 @@ interface SidecarsModule {
   renderSidecars(
     artifact: ArrayBuffer,
     cfg: typeof city,
+    bbox: [number, number, number, number],
   ): Promise<{ geojson: Uint8Array; poster: Uint8Array; width: number; height: number }>;
 }
 
@@ -102,7 +103,11 @@ async function main() {
   let poster: { name: string; bytes: Uint8Array; width: number; height: number } | null = null;
   if (sidecarsMod) {
     log("rendering default isochrone + poster…");
-    const side = await sidecarsMod.renderSidecars(raw.buffer.slice(0) as ArrayBuffer, city);
+    const side = await sidecarsMod.renderSidecars(
+      raw.buffer.slice(0) as ArrayBuffer,
+      city,
+      compiled.bbox,
+    );
     defaultIso = {
       name: `default-iso.${sha256Hex(side.geojson).slice(0, 8)}.geojson`,
       bytes: side.geojson,

@@ -19,8 +19,8 @@ conventional commits, merge to `main`, annotated tag `stage-NN` on completion.
 | 6 | Planning (backlog) | Product Owner | **done** 2026-08-29 | stage-06 |
 | 7 | Repo + CI | DevOps | **done** 2026-08-29 | stage-07 |
 | 8 | Data pipeline | Dev | **done** 2026-08-30 | stage-08 |
-| 9 | Core engine | Dev | in progress | |
-| 10 | Frontend | Dev | pending | |
+| 9 | Core engine | Dev | **done** 2026-08-30 | stage-09 |
+| 10 | Frontend | Dev | in progress | |
 | 11 | API/glue (serving) | Dev | pending | |
 | 12 | Testing | QA | pending | |
 | 13 | Deploy | DevOps | pending | |
@@ -63,6 +63,44 @@ Environment verified: Node 22.22.3 (nvm4w), pnpm, git 2.54, gh CLI
 authenticated as imSuvro (scopes repo+workflow), Java 17 (runs the official
 MobilityData gtfs-validator), Docker available. Vercel via authenticated MCP
 connector (team `suvros-projects`, hobby).
+
+### Stage 9 — Core engine (done 2026-08-30, tag stage-09)
+
+`src/engine/{csa,isochrone,engine,geo}.ts` — the isomorphic core shared by
+worker, tests, and the sidecar renderer:
+
+- **CSA** with the ADR-006 **merged two-cursor after-midnight scan**
+  (today's window against `bits[wd]` interleaved with yesterday's
+  `[T+86400, …)` against `bits[(wd+6)%7]` by effective departure), epoch-
+  stamped boarding flags (allocation-free queries), and ADR-005 walk-horizon
+  seeding via the artifact's spatial index (no radius cap).
+- **IsochroneGrid**: field fill + d3-contour, band identity taken from each
+  contour's own `.value`, features sorted + asserted against config bands.
+- `pipeline/sidecars.ts`: default-view isochrone + **Node-rendered poster**
+  (SVG → sharp → WebP at the exact WebMercator camera of
+  `defaultView.zoom`, so the map cross-fade aligns pixel-true).
+
+**Test battery (19 new; 51 total, all green):** no-time-travel over 200
+random queries; stop-set nesting; polygon nesting via 500-point ray-cast
+sampling; timetable oracle; weekday gating (Saturday-only service);
+walk-only desert honesty; out-of-coverage explicit-empty; determinism
+across instances; **two merged-scan regressions with distances chosen so
+walking cannot mask transit** (Monday-00:30 reads Sunday's 25:00 trip;
+a yesterday-frame arrival boards a today-frame departure); real-artifact
+gates (default view < 250 ms, > 2,000 stops reached, band property ===
+manifest.bands).
+
+**The point-sample nesting test caught a real bug on first run:**
+d3-contour reorders thresholds internally, so positional band labeling
+reversed the bands (the 60-min polygon labeled 15). Fixed by reading each
+contour's `.value`; the same latent mislabel existed in `spike/iso-spike.ts`
+(its size/latency measurements were unaffected — only labels).
+
+**Full build now emits everything:** `default-iso.ac6ddf3b.geojson`
+83.8 KB (matches the stage-3b estimate), `poster.81b029a6.webp` 35.7 KB
+(1200×630, visually verified: nested Marina-sunset bands from Chennai
+Central, coast honestly empty), manifest contract-complete. Artifact hash
+unchanged (915b6267).
 
 ### Stage 8 — Data pipeline (done 2026-08-30, tag stage-08)
 
