@@ -13,8 +13,8 @@ conventional commits, merge to `main`, annotated tag `stage-NN` on completion.
 |---|---|---|---|---|
 | 1 | Research | Product Owner | **done** 2026-08-29 | stage-01 |
 | 2 | Product definition (PRD) | Product Owner | **done** 2026-08-29 | stage-02 |
-| 3 | Feasibility spike | Architect | in progress | |
-| 4 | UX | UX Designer | pending | |
+| 3 | Feasibility spike | Architect | **done** 2026-08-29 | stage-03 |
+| 4 | UX | UX Designer | in progress | |
 | 5 | Architecture (ADRs) | Architect | pending | |
 | 6 | Planning (backlog) | Product Owner | pending | |
 | 7 | Repo + CI | DevOps | pending | |
@@ -63,6 +63,43 @@ Environment verified: Node 22.22.3 (nvm4w), pnpm, git 2.54, gh CLI
 authenticated as imSuvro (scopes repo+workflow), Java 17 (runs the official
 MobilityData gtfs-validator), Docker available. Vercel via authenticated MCP
 connector (team `suvros-projects`, hobby).
+
+### Stage 3 — Feasibility spike (done 2026-08-29, tag stage-03)
+
+`spike/csa-spike.ts` (throwaway; kept for the record, excluded from any
+build): full parse → connections → footpaths → one-to-all CSA with
+after-midnight second window, on the real Chennai feed. **All 9 pre-committed
+gates PASS**, with enormous headroom:
+
+| Measure | Gate | Actual |
+|---|---|---|
+| Query p95 (300 queries: 20 central + 80 random × 3 reps) | < 250 ms | **0.9 ms** (p50 0.4, max 3.5) |
+| Parse + build | < 120 s | **1.7 s** |
+| RSS | < 1.5 GB | 255 MB |
+| Connections | 0.5–5 M | 1,313,396 |
+| Central-origin 60-min reach | ≥ 300 stops | 2,737 |
+| Time travel / nesting violations / oracle fails | 0 | 0 / 0 / 0 |
+
+Timetable oracle: 5/5, including two cases where CSA legitimately beat the
+sampled trip's scheduled arrival via a faster alternative.
+
+Feed facts the spike established (feeding stages 5 and 8):
+
+- Calendar actually holds **9 services**; only two carry trips: `Regular`
+  46,973 (all days) and `HSC` 74 (Mon–Sat). The `"test "` and XSS-payload
+  services have **zero trips** — they vanish naturally; string sanitization
+  still mandatory. Day-to-day service difference is therefore small (Sunday
+  −74 trips) — disclosed in UI copy rather than a fake distinction.
+- Row skips: 45 stop rows, 102 trip rows, 192 dangling stop_time refs,
+  **0 blank times**, 0 negative rides. 1,780 connections depart ≥ 24:00 —
+  the after-midnight second scan window is live behavior, not theory.
+- Stop bbox is bigger than assumed: 12.61–13.49 N, 79.80–80.34 E (~97 km
+  N–S). Grid sizing at 200 m ⇒ ~140k cells — still fine.
+- Sharding contingency (ADR-003) almost certainly unnecessary at 0.9 ms;
+  artifact ≈ 1.31 M × 14 B ≈ 18.4 MB raw before gzip.
+
+Chennai Central Tue 08:30 band stop-counts: 245 / 1,092 / 2,006 / 2,906 —
+a compelling default view confirmed.
 
 ### Stage 2 — PRD (done 2026-08-29, tag stage-02)
 
