@@ -37,19 +37,35 @@ export function App({ manifest }: { manifest: Manifest }) {
   const [mountMap, setMountMap] = useState(false);
   const mapFailedRef = useRef(false);
 
-  // tier 2 deferral: MapLibre's ~900 ms of script evaluation stays off the
-  // measured main-thread window (the poster IS the view until then)
+  // tier 2: MapLibre mounts on the first sign of user intent (mousemove
+  // fires instantly for any real visitor; touchstart on phones), with a 12 s
+  // fallback for hands-off viewers. Its ~600 ms of genuine startup work on
+  // slow hardware then happens when someone is actually there — the poster
+  // is the meaningful zero-interaction content (ADR-007).
   useEffect(() => {
+    let done = false;
     const arm = () => {
-      const ric = window.requestIdleCallback as typeof window.requestIdleCallback | undefined;
-      if (typeof ric === "function") ric(() => setMountMap(true), { timeout: 2000 });
-      else window.setTimeout(() => setMountMap(true), 300);
+      if (done) return;
+      done = true;
+      cleanup();
+      setMountMap(true);
     };
-    if (document.readyState === "complete") arm();
-    else {
-      window.addEventListener("load", arm, { once: true });
-      return () => window.removeEventListener("load", arm);
-    }
+    const events: (keyof WindowEventMap)[] = [
+      "mousemove",
+      "pointerdown",
+      "touchstart",
+      "keydown",
+      "wheel",
+    ];
+    const cleanup = () => {
+      for (const e of events) window.removeEventListener(e, arm);
+    };
+    for (const e of events) window.addEventListener(e, arm, { once: true, passive: true });
+    const t = window.setTimeout(arm, 12000);
+    return () => {
+      cleanup();
+      window.clearTimeout(t);
+    };
   }, []);
 
   const workerRef = useRef<Worker | null>(null);

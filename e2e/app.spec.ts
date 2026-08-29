@@ -15,8 +15,10 @@ test.beforeEach(({ page }) => {
 });
 
 async function waitForLiveEngine(page: Page) {
-  // the readout switching to a live stop count is the end-to-end signal that
-  // the worker downloaded, inflated, decoded, and answered a query
+  // the map mounts on first user intent — give it the nudge a real visitor
+  // provides by existing (mousemove), then wait for the live readout: the
+  // end-to-end signal that the worker downloaded, inflated, decoded, answered
+  await page.mouse.move(400, 300);
   await expect(page.locator(".readout")).toContainText(/stops in 60 min/, { timeout: 45_000 });
 }
 
