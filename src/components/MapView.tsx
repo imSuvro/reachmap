@@ -8,12 +8,19 @@ import { useEffect, useMemo, useRef } from "react";
 import {
   Map as MlMap,
   Marker,
+  setWorkerUrl,
   type GeoJSONSource,
   type MapLayerMouseEvent,
   type ErrorEvent as MlErrorEvent,
   type StyleSpecification,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+
+// MapLibre derives its worker URL from import.meta.url, which webpack points
+// into /_next/static/chunks/ where no worker exists — the map then silently
+// never fetches a single tile. The worker files are served as plain statics
+// (scripts/sync-maplibre-worker.mjs keeps them in lockstep with the package).
+setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 import polygonClipping from "polygon-clipping";
 import type { BandCollection, Manifest } from "../engine/types";
 
@@ -110,6 +117,8 @@ export function MapView(props: MapViewProps) {
       return;
     }
     mapRef.current = map;
+    // e2e/diagnostic seam: rendered-feature assertions need the instance
+    (window as unknown as { __rmMap?: MlMap }).__rmMap = map;
     const styleLoadedRef = { current: false };
     map.once("styledata", () => {
       styleLoadedRef.current = true;
@@ -177,6 +186,7 @@ export function MapView(props: MapViewProps) {
     });
 
     return () => {
+      delete (window as unknown as { __rmMap?: MlMap }).__rmMap;
       map.remove();
       mapRef.current = null;
       loadedRef.current = false;
@@ -192,9 +202,18 @@ export function MapView(props: MapViewProps) {
     src?.setData(rings as GeoJSON.GeoJSON);
   }, [rings]);
 
-  // pin follows the origin
+  // pin follows the origin; the camera follows only when the origin left the
+  // view (programmatic moves — e2e seam, future URL state; a real click is
+  // always in view and must not yank the camera)
   useEffect(() => {
     markerRef.current?.setLngLat([props.origin.lon, props.origin.lat]);
+    const map = mapRef.current;
+    if (map && loadedRef.current) {
+      const b = map.getBounds();
+      if (!b.contains([props.origin.lon, props.origin.lat])) {
+        map.easeTo({ center: [props.origin.lon, props.origin.lat], duration: 600 });
+      }
+    }
   }, [props.origin]);
 
   // computing dim + ruler highlight
