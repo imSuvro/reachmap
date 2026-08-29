@@ -23,8 +23,8 @@ conventional commits, merge to `main`, annotated tag `stage-NN` on completion.
 | 10 | Frontend | Dev | **done** 2026-08-30 | stage-10 |
 | 11 | API/glue (serving) | Dev | **done** 2026-08-30 | stage-11 |
 | 12 | Testing | QA | **done** 2026-08-30 | stage-12 |
-| 13 | Deploy | DevOps | in progress | |
-| 14 | Launch | Product Owner | pending | |
+| 13 | Deploy | DevOps | **done** 2026-08-30 | stage-13 |
+| 14 | Launch | Product Owner | **done** 2026-08-30 | stage-14 |
 
 ## NEEDS-HUMAN
 
@@ -63,6 +63,61 @@ Environment verified: Node 22.22.3 (nvm4w), pnpm, git 2.54, gh CLI
 authenticated as imSuvro (scopes repo+workflow), Java 17 (runs the official
 MobilityData gtfs-validator), Docker available. Vercel via authenticated MCP
 connector (team `suvros-projects`, hobby).
+
+### Stage 14 — Launch (done 2026-08-30, tag stage-14)
+
+Recruiter-facing `README.md` (engineering:documentation invoked): live URL
+up top, a real production screenshot as the hero, the mermaid
+build→artifact→browser diagram, the correctness story told honestly
+(including the masked-map bug and how pixel-verification caught it),
+measured performance table, ODbL/OpenFreeMap attribution, run-it-yourself
+commands, and a repo tour. Live screenshots from the stage-13 verification
+committed under `docs/screenshots/`.
+
+Zero-interaction default state confirmed on production: the poster paints
+the real Chennai Central isochrone immediately; the live vector bands and
+worker engine arrive on first user intent; the readout goes live without
+any interaction at all.
+
+**All 14 stages complete.** Output check against the brief: live verified
+production URL ✓ · public repo with protected main, green required CI, one
+tag per stage ✓ · docs/ complete (research, PRD, ux, adr/×10, backlog,
+contracts, testing) ✓ · PROJECT_LOG with full stage log + NEEDS-HUMAN ✓ ·
+recruiter-facing README with live link ✓.
+
+### Stage 13 — Deploy (done 2026-08-30, tag stage-13)
+
+engineering:deploy-checklist invoked (rollback items skipped per brief);
+production deploys via the git integration (merge to main), verified by
+`scripts/verify-live.mjs` driving the real site in Chromium.
+
+**The stage's insistence on rendered-pixel verification caught a launch-
+blocking bug the entire test suite had missed:** MapLibre v6 derives its
+worker URL from `import.meta.url`, which webpack points into
+`/_next/static/chunks/` — the module script 404s as text/html and, since
+MapLibre's worker owns tile fetching, the map silently never requested a
+single tile. `load` never fired, band layers were never added, and every
+band visual to date had actually been the poster doing its ADR-007 job too
+well. (This also finally explains the stage-10 "module script" console
+error — it was never stale-server noise.) Fix: serve
+`maplibre-gl-worker.mjs` + `maplibre-gl-shared.mjs` as plain statics,
+prebuild-synced to the installed version, + `setWorkerUrl()`. Camera now
+also pans to origins set outside the view (found via the same screenshots).
+
+With the map REALLY rendering, Lighthouse was re-measured honestly:
+**98 on CI (calibrated ×1) / 97 local ×1 / 85 local strict ×4 mobile**
+(TBT is MapLibre's genuine startup on slow hardware; earlier 91/98 scores
+measured the broken map and are voided in docs/testing.md). MapLibre now
+mounts on first user intent (mousemove/touch — instant for real visitors,
+12 s fallback), keeping its ~600 ms of startup out of the idle window
+while the poster remains the zero-interaction content.
+
+**Final production verification (https://reachmap.vercel.app):** isochrones
+render from three distinct origins — Chennai Central 2,909 stops · T. Nagar
+2,626 · Tambaram 2,339 (screenshots in the repo's README assets) — zero
+console errors; artifact opaque + immutable + Accept-Ranges on the live
+edge; Range → 206 recorded (ADR-008 precondition); poster served. **LIVE
+VERIFICATION PASSED.**
 
 ### Stage 12 — Testing (done 2026-08-30, tag stage-12)
 
