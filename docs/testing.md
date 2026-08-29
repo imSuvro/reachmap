@@ -47,8 +47,13 @@ DecompressionStream, decoded the container, ran CSA, and posted a result.
   4× CPU multiplier *assuming a fast host*; a 2-core CI runner is already
   roughly that phone, so CI runs with `LH_CPU_MULT=1` (Lighthouse's own
   variability guidance: calibrate `cpuSlowdownMultiplier` to the host).
-  Locally the default 4× applies. Measured: local 91 at 4×; the CI runner at
-  4× reported TBT 1,390 ms for the same build that measures 260 ms locally.
+  Locally the default 4× applies. Measured after the MapLibre worker fix
+  (i.e., with the map actually rendering): **97 calibrated / 85 at strict
+  4× mobile throttling** (TBT 490 ms — MapLibre's evaluation is real work;
+  full-GL map pages rarely clear 90 on strict mobile simulation). Both
+  numbers are reported; the CI gate runs the calibrated form. Earlier
+  scores (91/98) predate the worker fix and measured a page whose map was
+  silently not rendering — they are recorded here as void.
 - **Size budgets** (`scripts/check-budgets.mjs`): artifact gz ≤ 8 MB,
   default-iso ≤ 300 KB, poster ≤ 100 KB, stopnames ≤ 500 KB, manifest
   contract-complete, output dir exactly the referenced file set.

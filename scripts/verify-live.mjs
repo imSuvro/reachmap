@@ -29,6 +29,7 @@ const check = (name, ok, detail = "") => {
 
 console.log(`verifying ${BASE}\n`);
 await page.goto(BASE, { waitUntil: "load" });
+await page.mouse.move(500, 300); // first intent mounts the map
 
 // live engine answers the default view
 await page.waitForFunction(

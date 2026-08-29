@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("mobile: the dial is a bottom sheet that collapses and expands", async ({ page }) => {
   await page.goto("/");
+  await page.touchscreen.tap(200, 300); // first intent mounts the map
   await expect(page.locator(".readout")).toContainText(/stops in 60 min/, { timeout: 45_000 });
   const dial = page.locator(".dial");
   await expect(dial).toBeVisible();
